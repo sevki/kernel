@@ -2219,10 +2219,7 @@ static int mtk_thermal_probe(struct platform_device *pdev)
 			mtk_thermal_init_bank(mt, i, mt->apmixed_phys_base,
 					      mt->auxadc_phys_base, ctrl_id);
 
-	tzdev = devm_thermal_of_zone_register(&pdev->dev, 0, mt,
-					      &mtk_thermal_ops);
-	if (IS_ERR(tzdev))
-		return PTR_ERR(tzdev);
+	platform_set_drvdata(pdev, mt);
 
 	for (i = 0; i < mt->conf->num_sensors + 1; i++) {
 		tz = kmalloc(sizeof(*tz), GFP_KERNEL);
