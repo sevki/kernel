@@ -1256,7 +1256,9 @@ cfg80211_iftd_set_he_6ghz_capa(struct ieee80211_sband_iftype_data *iftd,
 #endif /* < 5.8 */
 
 #if LINUX_VERSION_IS_GEQ(4,20,0)
-#include <linux/compiler_attributes.h>
+#include <hdrs/linux/compiler_attributes.h>
+#else
+# define __counted_by(member)
 #endif
 
 #ifndef __has_attribute
@@ -1992,7 +1994,7 @@ static inline void backport_netif_napi_add(struct net_device *dev,
 #define netif_napi_add LINUX_BACKPORT(netif_napi_add)
 #endif
 
-#if CFG80211_VERSION < KERNEL_VERSION(6,7,0)
+#if CFG80211_VERSION < KERNEL_VERSION(6,8,0)
 #define cfg80211_scan_request_tsf_report_link_id(req)             -1
 #define cfg80211_scan_request_set_tsf_report_link_id(req, ink_id) do {} while (0)
 #define cfg80211_scan_request_check_tsf_report_link_id(req, mask) false
@@ -2162,4 +2164,49 @@ static inline void cfg80211_schedule_channels_check(struct net_device *netdev)
 }
 #define NL80211_EXT_FEATURE_DFS_CONCURRENT -1
 #define NL80211_RRF_DFS_CONCURRENT 0
+
+struct cfg80211_ttlm_params {
+	u16 dlink[8];
+	u16 ulink[8];
+};
+
+#if CFG80211_VERSION < KERNEL_VERSION(6, 8, 0)
+#define NL80211_EXT_FEATURE_SPP_AMSDU_SUPPORT -1
+#define ASSOC_REQ_SPP_AMSDU BIT(7)
+#define NL80211_STA_FLAG_SPP_AMSDU 8
 #endif
+
+#endif
+
+#if CFG80211_VERSION < KERNEL_VERSION(6,7,0)
+static inline u32
+iwl7000_ieee80211_mandatory_rates(struct ieee80211_supported_band *sband)
+{
+	return ieee80211_mandatory_rates(sband, NL80211_BSS_CHAN_WIDTH_20);
+}
+#define ieee80211_mandatory_rates iwl7000_ieee80211_mandatory_rates
+#endif
+
+#if LINUX_VERSION_IS_LESS(6,7,0)
+/**
+ *	napi_schedule - schedule NAPI poll
+ *	@n: NAPI context
+ *
+ * Schedule NAPI poll routine to be called if it is not already
+ * running.
+ * Return true if we schedule a NAPI or false if not.
+ * Refer to napi_schedule_prep() for additional reason on why
+ * a NAPI might not be scheduled.
+ */
+static inline bool LINUX_BACKPORT(napi_schedule)(struct napi_struct *n)
+{
+	if (napi_schedule_prep(n)) {
+		__napi_schedule(n);
+		return true;
+	}
+
+	return false;
+}
+#define napi_schedule LINUX_BACKPORT(napi_schedule)
+#endif /* < 6.7.0 */
+
