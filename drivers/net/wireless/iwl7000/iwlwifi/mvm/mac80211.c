@@ -211,11 +211,15 @@ struct ieee80211_regdomain *iwl_mvm_get_regdomain(struct wiphy *wiphy,
 	IWL_DEBUG_LAR(mvm, "MCC update response version: %d\n", resp_ver);
 
 	regd = iwl_parse_nvm_mcc_info(mvm->trans->dev, mvm->cfg,
+#if CFG80211_VERSION <= KERNEL_VERSION(6,8,0)
+				      mvm->nvm_data,
+#endif
 				      __le32_to_cpu(resp->n_channels),
 				      resp->channels,
 				      __le16_to_cpu(resp->mcc),
 				      __le16_to_cpu(resp->geo_info),
-				      le32_to_cpu(resp->cap), resp_ver);
+				      le32_to_cpu(resp->cap), resp_ver,
+				      mvm->fwrt.uats_enabled);
 	/* Store the return source id */
 	src_id = resp->source_id;
 	if (IS_ERR_OR_NULL(regd)) {
@@ -341,6 +345,9 @@ static const u8 tm_if_types_ext_capa_sta[] = {
 					__bf_shf(IEEE80211_EML_CAP_EMLSR_PADDING_DELAY) | \
 				 IEEE80211_EML_CAP_EMLSR_TRANSITION_DELAY_64US << \
 					__bf_shf(IEEE80211_EML_CAP_EMLSR_TRANSITION_DELAY))
+#define IWL_MVM_MLD_CAPA_OPS FIELD_PREP_CONST( \
+			IEEE80211_MLD_CAP_OP_TID_TO_LINK_MAP_NEG_SUPP, \
+			IEEE80211_MLD_CAP_OP_TID_TO_LINK_MAP_NEG_SUPP_SAME)
 
 static const struct wiphy_iftype_ext_capab add_iftypes_ext_capa[] = {
 	{
@@ -351,6 +358,7 @@ static const struct wiphy_iftype_ext_capab add_iftypes_ext_capa[] = {
 		/* relevant only if EHT is supported */
 #if CFG80211_VERSION >= KERNEL_VERSION(6,0,0)
 		.eml_capabilities = IWL_MVM_EMLSR_CAPA,
+		.mld_capa_and_ops = IWL_MVM_MLD_CAPA_OPS,
 #endif
 	},
 	{
@@ -361,6 +369,7 @@ static const struct wiphy_iftype_ext_capab add_iftypes_ext_capa[] = {
 		/* relevant only if EHT is supported */
 #if CFG80211_VERSION >= KERNEL_VERSION(6,0,0)
 		.eml_capabilities = IWL_MVM_EMLSR_CAPA,
+		.mld_capa_and_ops = IWL_MVM_MLD_CAPA_OPS,
 #endif
 	},
 };
@@ -582,6 +591,11 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
 	if (fw_has_capa(&mvm->fw->ucode_capa,
 			IWL_UCODE_TLV_CAPA_TIME_SYNC_BOTH_FTM_TM))
 		set_hw_timestamp_max_peers(hw, 1);
+
+	if (fw_has_capa(&mvm->fw->ucode_capa,
+			IWL_UCODE_TLV_CAPA_SPP_AMSDU_SUPPORT))
+		wiphy_ext_feature_set(hw->wiphy,
+				      NL80211_EXT_FEATURE_SPP_AMSDU_SUPPORT);
 
 	ieee80211_hw_set(hw, SINGLE_SCAN_ON_ALL_BANDS);
 	hw->wiphy->features |=
@@ -1503,6 +1517,7 @@ void iwl_mvm_mac_stop(struct ieee80211_hw *hw)
 	 * discover that its list is now empty.
 	 */
 	cancel_work_sync(&mvm->async_handlers_wk);
+	wiphy_work_cancel(hw->wiphy, &mvm->async_handlers_wiphy_wk);
 }
 
 struct iwl_mvm_phy_ctxt *iwl_mvm_get_free_phy_ctxt(struct iwl_mvm *mvm)
@@ -2894,10 +2909,6 @@ static void iwl_mvm_bss_info_changed_station(struct iwl_mvm *mvm,
 
 	if (changes & BSS_CHANGED_ASSOC) {
 		if (vif->cfg.assoc) {
-#ifdef CPTCFG_IWLWIFI_DEBUG_SESSION_PROT_FAIL
-			iwl_debug_session_prot(false);
-#endif
-
 			/* clear statistics to get clean beacon counter */
 			iwl_mvm_request_statistics(mvm, true);
 			for_each_mvm_vif_valid_link(mvmvif, i)
