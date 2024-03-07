@@ -1296,7 +1296,7 @@ static bool fault_supports_stage2_huge_mapping(struct kvm_memory_slot *memslot,
 static long
 transparent_hugepage_adjust(struct kvm *kvm, struct kvm_memory_slot *memslot,
 			    unsigned long hva, kvm_pfn_t *pfnp,
-			    struct page **page, phys_addr_t *ipap)
+			    phys_addr_t *ipap)
 {
 	kvm_pfn_t pfn = *pfnp;
 
@@ -1305,8 +1305,7 @@ transparent_hugepage_adjust(struct kvm *kvm, struct kvm_memory_slot *memslot,
 	 * sure that the HVA and IPA are sufficiently aligned and that the
 	 * block map is contained within the memslot.
 	 */
-	if (*page && 
-	    fault_supports_stage2_huge_mapping(memslot, hva, PMD_SIZE)) {
+	if (fault_supports_stage2_huge_mapping(memslot, hva, PMD_SIZE)) {
 		int sz = get_user_mapping_size(kvm, hva);
 
 		if (sz < 0)
@@ -1334,11 +1333,10 @@ transparent_hugepage_adjust(struct kvm *kvm, struct kvm_memory_slot *memslot,
 		 * page accordingly.
 		 */
 		*ipap &= PMD_MASK;
-		put_page(*page);
+		kvm_release_pfn_clean(pfn);
 		pfn &= ~(PTRS_PER_PMD - 1);
+		get_page(pfn_to_page(pfn));
 		*pfnp = pfn;
-		*page = pfn_to_page(pfn);
-		get_page(*page);
 
 		return PMD_SIZE;
 	}
@@ -1424,7 +1422,6 @@ static int user_mem_abort(struct kvm_vcpu *vcpu, phys_addr_t fault_ipa,
 	short vma_shift;
 	gfn_t gfn;
 	kvm_pfn_t pfn;
-	struct page *page;
 	bool logging_active = memslot_is_logging(memslot);
 	unsigned long fault_level = kvm_vcpu_trap_get_fault_level(vcpu);
 	long vma_pagesize, fault_granule;
@@ -1523,8 +1520,8 @@ static int user_mem_abort(struct kvm_vcpu *vcpu, phys_addr_t fault_ipa,
 	mmu_seq = vcpu->kvm->mmu_invalidate_seq;
 	mmap_read_unlock(current->mm);
 
-	pfn = __gfn_to_pfn_page_memslot(memslot, gfn, false, false, NULL,
-					write_fault, &writable, NULL, &page);
+	pfn = __gfn_to_pfn_memslot(memslot, gfn, false, false, NULL,
+				   write_fault, &writable, NULL);
 	if (pfn == KVM_PFN_ERR_HWPOISON) {
 		kvm_send_hwpoison_signal(hva, vma_shift);
 		return 0;
@@ -1570,8 +1567,7 @@ static int user_mem_abort(struct kvm_vcpu *vcpu, phys_addr_t fault_ipa,
 			vma_pagesize = fault_granule;
 		else
 			vma_pagesize = transparent_hugepage_adjust(kvm, memslot,
-					                           hva,
-								   &pfn, &page,
+								   hva, &pfn,
 								   &fault_ipa);
 
 		if (vma_pagesize < 0) {
@@ -1617,17 +1613,13 @@ static int user_mem_abort(struct kvm_vcpu *vcpu, phys_addr_t fault_ipa,
 
 	/* Mark the page dirty only if the fault is handled successfully */
 	if (writable && !ret) {
-		if (page)
-			kvm_set_pfn_dirty(pfn);
+		kvm_set_pfn_dirty(pfn);
 		mark_page_dirty_in_slot(kvm, memslot, gfn);
 	}
 
 out_unlock:
 	read_unlock(&kvm->mmu_lock);
-	if (page) {
-		kvm_set_pfn_accessed(pfn);
-		put_page(page);
-	}
+	kvm_release_pfn_clean(pfn);
 	return ret != -EAGAIN ? ret : 0;
 }
 
