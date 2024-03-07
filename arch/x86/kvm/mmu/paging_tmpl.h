@@ -537,7 +537,6 @@ FNAME(prefetch_gpte)(struct kvm_vcpu *vcpu, struct kvm_mmu_page *sp,
 	unsigned pte_access;
 	gfn_t gfn;
 	kvm_pfn_t pfn;
-	struct page *page;
 
 	if (FNAME(prefetch_invalid_gpte)(vcpu, sp, spte, gpte))
 		return false;
@@ -550,13 +549,12 @@ FNAME(prefetch_gpte)(struct kvm_vcpu *vcpu, struct kvm_mmu_page *sp,
 	if (!slot)
 		return false;
 
-	pfn = gfn_to_pfn_page_memslot_atomic(slot, gfn, &page);
+	pfn = gfn_to_pfn_memslot_atomic(slot, gfn);
 	if (is_error_pfn(pfn))
 		return false;
 
 	mmu_set_spte(vcpu, slot, spte, pte_access, gfn, pfn, NULL);
-	if (page)
-		put_page(page);
+	kvm_release_pfn_clean(pfn);
 	return true;
 }
 
@@ -850,8 +848,7 @@ static int FNAME(page_fault)(struct kvm_vcpu *vcpu, struct kvm_page_fault *fault
 
 out_unlock:
 	write_unlock(&vcpu->kvm->mmu_lock);
-	if (fault->page)
-		put_page(fault->page);
+	kvm_release_pfn_clean(fault->pfn);
 	return r;
 }
 
