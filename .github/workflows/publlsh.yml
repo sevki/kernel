@@ -23,7 +23,7 @@ jobs:
           skip-github-pull-request: true
           skip-github-release: true
           release-type: simple
-      - name: Set up Chrome OS environment
+      - name: Set up okLinux environment
         if: ${{ steps.release.outputs.release_created }}  
         run: |
           ./deps
