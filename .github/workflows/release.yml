@@ -1,4 +1,4 @@
-name: release-pr
+name: Propose Release
 
 on:
   push:
