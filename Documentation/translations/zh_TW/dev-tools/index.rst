@@ -21,10 +21,11 @@ Documentation/dev-tools/testing-overview.rst
 .. toctree::
    :maxdepth: 2
 
-   sparse
+   
 
 Todolist:
 
+ - sparse
  - coccinelle
  - kcov
  - ubsan

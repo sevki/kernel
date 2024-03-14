@@ -138,7 +138,11 @@ class KernelDocDirective(Directive):
                     lineoffset = int(match.group(1)) - 1
                     # we must eat our comments since the upset the markup
                 else:
-                    doc = env.srcdir + "/" + env.docname + ":" + str(self.lineno)
+                    # /workspace/Documentation/sphinx/kerneldoc.py:141: RemovedInSphinx80Warning: Sphinx 8 will drop support for representing paths as strings. Use "pathlib.Path" or "os.fspath" instead.
+                    #   doc = env.srcdir + "/" + env.docname + ":" + str(self.lineno)
+                    # FIXME: this is a hack to get the filename into the error message
+                    # doc = env.srcdir + "/" + env.docname + ":" + str(self.lineno)
+                    doc = os.path.join(env.srcdir, env.docname) + ":" + str(self.lineno)
                     result.append(line, doc + ": " + filename, lineoffset)
                     lineoffset += 1
 
