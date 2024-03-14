@@ -1,9 +1,7 @@
-name: publish
+name: Publish Image
 
 on:
-  push:
-    branches:
-      - main
+  release: true
   
 permissions:
   contents: write
@@ -17,10 +15,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-      - uses: google-github-actions/release-please-action@v4
-        id: release
-        with:
-          release-type: simple
       - name: Set up okLinux environment
         if: ${{ steps.release.outputs.release_created }}  
         run: |
@@ -28,13 +22,10 @@ jobs:
           cd kernel
           export CHROMEOS_KERNEL_FAMILY=termina
       - name: Prepare kernel configuration
-        if: ${{ steps.release.outputs.release_created }}  
         run: make olddefconfig
       - name: Build kernel image
-        if: ${{ steps.release.outputs.release_created }}  
         run: make -j$(nproc) bzImage
       - name: Upload Release Artifact  
-        if: ${{ steps.release.outputs.release_created }}  
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh release upload ${{ steps.release.outputs.tag_name }} ./arch/x86_64/boot/bzImage
