@@ -198,7 +198,7 @@ Resources
 =========
 
 Protocol specifications are maintained on github:
-http://ericvh.github.com/9p-rfc/
+http://ericvh.github.io/9p-rfc/
 
 9p client and server implementations are listed on
 http://9p.cat-v.org/implementations
