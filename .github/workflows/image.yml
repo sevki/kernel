@@ -1,0 +1,25 @@
+
+name: Build Kernel Image
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Chrome OS environment
+        run: |
+          cd kernel
+          export CHROMEOS_KERNEL_FAMILY=termina
+
+      - name: Prepare kernel configuration
+        run: make olddefconfig
+
+      - name: Build kernel image
+        run: make -j$(nproc) bzImage
