@@ -36,8 +36,4 @@ jobs:
           /usr/bin/python3 -m venv sphinx
           . sphinx/bin/activate
           pip install -r ./Documentation/sphinx/requirements.txt
-<<<<<<< HEAD
           make htmldocs
-=======
-          make htmldocs
->>>>>>> 8a6d903138bc (chore: fix pip env)
