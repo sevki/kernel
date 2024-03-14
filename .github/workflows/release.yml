@@ -1,10 +1,10 @@
-name: Release Please!
+name: release-pr
 
 on:
   push:
     branches:
       - main
-
+  
 permissions:
   contents: write
   pull-requests: write
@@ -21,17 +21,3 @@ jobs:
         id: release
         with:
           release-type: simple
-      - name: Set up Chrome OS environment
-        if: ${{ steps.release.outputs.release_created }}  
-        run: |
-          ./deps
-          cd kernel
-          export CHROMEOS_KERNEL_FAMILY=termina
-      - name: Prepare kernel configuration
-        run: make olddefconfig
-      - name: Build kernel image
-        run: make -j$(nproc) bzImage
-      - name: Upload Release Artifact  
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload ${{ steps.release.outputs.tag_name }} ./arch/x86_64/boot/bzImage
