@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.8.1](https://github.com/sevki/kernel/compare/v6.8.0...v6.8.1) (2024-03-14)
+
+
+### Bug Fixes
+
+* Update publlsh.yml ([4beb226](https://github.com/sevki/kernel/commit/4beb226da15586e1a21e1bd720b80d192110b370))
+
 ## [6.8.0](https://github.com/sevki/kernel/compare/v6.7.0...v6.8.0) (2024-03-14)
 
 
