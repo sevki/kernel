@@ -17,25 +17,22 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-
-      - name: Set up Chrome OS environment
-        run: |
-          ./deps
-          cd kernel
-          export CHROMEOS_KERNEL_FAMILY=termina
-
-      - name: Prepare kernel configuration
-        run: make olddefconfig
-
-      - name: Build kernel image
-        run: make -j$(nproc) bzImage
-
+        
       - uses: google-github-actions/release-please-action@v4
         id: release
         with:
           release-type: simple
-      - name: Upload Release Artifact
-        if: ${{ steps.release.outputs.release_created }}
+      - name: Set up Chrome OS environment
+        if: ${{ steps.release.outputs.release_created }}  
+        run: |
+          ./deps
+          cd kernel
+          export CHROMEOS_KERNEL_FAMILY=termina
+      - name: Prepare kernel configuration
+        run: make olddefconfig
+      - name: Build kernel image
+        run: make -j$(nproc) bzImage
+      - name: Upload Release Artifact  
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh release upload ${{ steps.release.outputs.tag_name }} ./arch/x86_64/boot/bzImage
