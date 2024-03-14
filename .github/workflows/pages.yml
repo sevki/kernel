@@ -38,7 +38,6 @@ jobs:
       - name: Setup okLinux environment
         run: |
           ./deps
-          cd kernel
           /usr/bin/python3 -m venv sphinx
           . sphinx/bin/activate
           pip install -r ./Documentation/sphinx/requirements.txt

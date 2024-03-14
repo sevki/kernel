@@ -24,3 +24,20 @@ jobs:
 
       - name: Build kernel image
         run: make -j$(nproc) bzImage
+  build_pages:
+    runs-on: ubuntu-latest
+    container:
+      image: debian:latest    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+      - name: Setup okLinux environment
+        run: |
+          ./deps
+          /usr/bin/python3 -m venv sphinx
+          . sphinx/bin/activate
+          pip install -r ./Documentation/sphinx/requirements.txt
+      - name: Make htmldocs
+        run: make htmldocs
