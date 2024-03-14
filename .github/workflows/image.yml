@@ -1,10 +1,8 @@
-
-name: Build Kernel Image
+name: Build PR
 on:
   pull_request:
     branches:
       - main
-
 
 jobs:
   build:
