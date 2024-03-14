@@ -20,8 +20,6 @@ jobs:
       - uses: google-github-actions/release-please-action@v4
         id: release
         with:
-          skip-github-pull-request: true
-          skip-github-release: true
           release-type: simple
       - name: Set up okLinux environment
         if: ${{ steps.release.outputs.release_created }}  
