@@ -1,8 +1,14 @@
+name: Release Please!
+
 on:
   push:
     branches:
       - main
-name: release-please
+
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   release-please:
     runs-on: ubuntu-latest
@@ -17,7 +23,6 @@ jobs:
           ./deps
           cd kernel
           export CHROMEOS_KERNEL_FAMILY=termina
-          
 
       - name: Prepare kernel configuration
         run: make olddefconfig
