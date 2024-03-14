@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.8.2](https://github.com/sevki/kernel/compare/v6.8.1...v6.8.2) (2024-03-14)
+
+
+### Bug Fixes
+
+* change push to release for publish ([524eff1](https://github.com/sevki/kernel/commit/524eff169d2a0bd0a5c0f8151f6e32728ec0862b))
+
 ## [6.8.1](https://github.com/sevki/kernel/compare/v6.8.0...v6.8.1) (2024-03-14)
 
 
