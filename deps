@@ -9,6 +9,7 @@ apt-get install --yes --no-install-recommends \
     ca-certificates \
     bc \
     bison \
+    build-essential \
     clang \
     cloud-image-utils \
     curl \
