@@ -1,21 +1,22 @@
+name: publish
 
-name: Build Kernel Image
 on:
-  pull_request:
-    branches:
-      - main
-
+  push:
+    tags:
+      - '*'
+    
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
-  build:
+  release-please:
     runs-on: ubuntu-latest
     container:
       image: debian:latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-
       - name: Set up Chrome OS environment
         run: |
           ./deps
@@ -23,6 +24,9 @@ jobs:
           export CHROMEOS_KERNEL_FAMILY=termina
       - name: Prepare kernel configuration
         run: make olddefconfig
-
       - name: Build kernel image
         run: make -j$(nproc) bzImage
+      - name: Upload Release Artifact  
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload ${{ steps.release.outputs.tag_name }} ./arch/x86_64/boot/bzImage
