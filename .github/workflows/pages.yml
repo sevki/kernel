@@ -40,7 +40,7 @@ jobs:
           ./deps
           cd kernel
           /usr/bin/python3 -m venv sphinx_7
-          source sphinx_7/bin/activate
+          . sphinx_7/bin/activate
           pip install -r ./Documentation/sphinx/requirements.txt
       - name: Make htmldocs
         run: make htmldocs
