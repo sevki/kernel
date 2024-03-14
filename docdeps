@@ -62,8 +62,15 @@ apt-get install --yes --no-install-recommends \
     strace \
     tmux \
     wayland-protocols \
+    imagemagick \
+    graphviz \
+    dvipng \
+    fonts-noto-cjk \
+    latexmk \
+    librsvg2-bin \
+    texlive-lang-chinese \
+    texlive-xetex \
     wget
-apt-get clean
 
 # mdformat is not available as a debian package. Install via pipx instead.
 pipx install mdformat

@@ -37,18 +37,14 @@ jobs:
         uses: actions/configure-pages@v4
       - name: Setup okLinux environment
         run: |
-          ./deps
-          cd kernel
+          ./docdeps
           /usr/bin/python3 -m venv sphinx
           . sphinx/bin/activate
           pip install -r ./Documentation/sphinx/requirements.txt
-          
-      - name: Make htmldocs
-        run: make htmldocs
+          make htmldocs
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload entire repository
           path: './Documentation/output'
       - name: Deploy to GitHub Pages
         id: deployment

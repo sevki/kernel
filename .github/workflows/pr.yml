@@ -13,8 +13,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-
-      - name: Set up Chrome OS environment
+      - name: Set up okLinux environment
         run: |
           ./deps
           cd kernel
@@ -24,3 +23,17 @@ jobs:
 
       - name: Build kernel image
         run: make -j$(nproc) bzImage
+  build_pages:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+      - name: Setup okLinux environment
+        run: |
+          ./docdeps
+          /usr/bin/python3 -m venv sphinx
+          . sphinx/bin/activate
+          pip install -r ./Documentation/sphinx/requirements.txt
+          make htmldocs
