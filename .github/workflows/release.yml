@@ -1,20 +1,13 @@
-
-name: Build Kernel Image
 on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
-
-
+name: release-please
 jobs:
-  build:
+  release-please:
     runs-on: ubuntu-latest
     container:
       image: debian:latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -31,3 +24,13 @@ jobs:
 
       - name: Build kernel image
         run: make -j$(nproc) bzImage
+
+      - uses: google-github-actions/release-please-action@v4
+        id: release
+        with:
+          release-type: simple
+      - name: Upload Release Artifact
+        if: ${{ steps.release.outputs.release_created }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload ${{ steps.release.outputs.tag_name }} ./arch/x86_64/boot/bzImage
