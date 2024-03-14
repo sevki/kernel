@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+# Copyright 2021 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+mkdir -p -m 755 /etc/apt/keyrings && wget -qO- https://cli.github.com/packages/githubcli-archive-keyring.gpg | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
+&& chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+&& echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+
+apt-get update --yes
+apt-get install --yes --no-install-recommends \
+    black \
+    ca-certificates \
+    bc \
+    bison \
+    build-essential \
+    clang \
+    cloud-image-utils \
+    curl \
+    dpkg-dev \
+    expect \
+    flex \
+    g++ \
+    gcc \
+    git \
+    gh \
+    jq \
+    libavcodec-dev \
+    libavutil-dev \
+    libcap-dev \
+    libclang-dev \
+    libdbus-1-dev \
+    libdrm-dev \
+    libepoxy-dev \
+    libelf-dev \
+    libglib2.0-dev \
+    libguestfs-tools \
+    libslirp-dev \
+    libssl-dev \
+    libswscale-dev \
+    libva-dev \
+    libxext-dev \
+    lld \
+    make \
+    meson \
+    mypy \
+    nasm \
+    ncat \
+    ninja-build \
+    openssh-client \
+    pkg-config \
+    protobuf-compiler \
+    qemu-system-x86 \
+    rsync \
+    screen \
+    strace \
+    tmux \
+    wayland-protocols \
+    wget
+apt-get autoremove && apt-get clean
+
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path
+source ${CARGO_HOME:-~/.cargo}/env
+
+# Install required rust components.
+# This will also ensure the toolchain required by ./rust-toolchain is installed.
+rustup component add cargo clippy rustfmt
+
+# LLVM tools are used to generate and process coverage files
+rustup component add llvm-tools-preview
+
+# Install nightly toolchain. Only used for rustfmt
+rustup toolchain install stable --profile minimal --component rustfmt
+
+# Cargo extension to install binary packages from github
+curl -L https://github.com/cargo-bins/cargo-binstall/releases/download/v1.4.4/cargo-binstall-x86_64-unknown-linux-gnu.tgz | tar -xzvvf - -C ${CARGO_HOME:-~/.cargo}/bin
+
+# The bindgen tool is required to build a crosvm dependency.
+cargo binstall --no-confirm bindgen-cli --version "0.68.1"
+
+# binutils are wrappers to call the rustup bundled versions of llvm tools.
+cargo binstall --no-confirm cargo-binutils
+
+# The mdbook and mdbook-mermaid tools are used to build the crosvm book.
+cargo binstall --no-confirm mdbook --version "0.4.25"
+cargo binstall --no-confirm mdbook-mermaid --version "0.12.6"
+cargo binstall --no-confirm mdbook-linkcheck --version "0.7.7"
+
+# Nextest is an improved test runner for cargo
+cargo binstall --no-confirm cargo-nextest --version "0.9.49"
