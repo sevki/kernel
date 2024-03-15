@@ -79,8 +79,50 @@ jobs:
     - name: clean up space
       run: |
         cd ../
-        rm -rf ./kernel
-        apt-get clean && apt-get autoremove
+        apt-get remove \
+            bc \
+            bison \
+            build-essential \
+            clang \
+            cloud-image-utils \
+            expect \
+            flex \
+            g++ \
+            gcc \
+            git \
+            gh \
+            jq \
+            libavcodec-dev \
+            libavutil-dev \
+            libcap-dev \
+            libclang-dev \
+            libdbus-1-dev \
+            libdrm-dev \
+            libepoxy-dev \
+            libelf-dev \
+            libglib2.0-dev \
+            libguestfs-tools \
+            libslirp-dev \
+            libssl-dev \
+            libswscale-dev \
+            libva-dev \
+            libxext-dev \
+            lld \
+            make \
+            meson \
+            mypy \
+            nasm \
+            ncat \
+            ninja-build \
+            openssh-client \
+            pkg-config \
+            protobuf-compiler \
+            qemu-system-x86 \
+            rsync \
+            screen \
+            strace \
+            tmux
+        apt-get clean && apt-get autoremove &&  apt-get autoclean
 
     # ℹ️ Command-line programs to run using the OS shell.
     # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
