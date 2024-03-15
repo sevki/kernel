@@ -1,5 +1,14 @@
 # Changelog
 
+## [6.8.5](https://github.com/sevki/kernel/compare/v6.8.4...v6.8.5) (2024-03-15)
+
+
+### Bug Fixes
+
+* remove rustdoc pr build ([d46b998](https://github.com/sevki/kernel/commit/d46b998c08f4ca5e7af307cc15d19f19036a25dc))
+* try to make codeql work ([d7eefc9](https://github.com/sevki/kernel/commit/d7eefc9dcba5bb46eb8f96e4ebf45538d71d9ad2))
+* try to make codeql work ([4404623](https://github.com/sevki/kernel/commit/440462334c7357a086c15ebea4c26e5398b9721a))
+
 ## [6.8.4](https://github.com/sevki/kernel/compare/v6.8.3...v6.8.4) (2024-03-15)
 
 
