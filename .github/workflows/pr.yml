@@ -5,7 +5,7 @@ on:
       - main
 
 jobs:
-  build:
+  build_kernel:
     runs-on: ubuntu-latest
     container:
       image: debian:latest
@@ -27,7 +27,11 @@ jobs:
         with:
           name: x86_64
           path: arch/x86_64        
-  build_pages:
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bzImage
+          path: arch/x86_64/boot/bzImage
+  build_kernel_docs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -41,7 +45,6 @@ jobs:
           . sphinx/bin/activate
           pip install -r ./Documentation/sphinx/requirements.txt
           make htmldocs
-          make LLVM=1 rustdoc
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
