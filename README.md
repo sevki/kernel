@@ -1,4 +1,4 @@
-<img src="Documentation/okLinux.png" width="200">
+<img src="Documentation/images/okLinux.png" width="200">
 
 # okLinux
 
