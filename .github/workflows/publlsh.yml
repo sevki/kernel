@@ -1,8 +1,9 @@
 name: Publish Image
 
 on:
-  release:
-    types: [published, created, edited]
+  push:
+    tags: 
+      - "*"
   
 permissions:
   contents: write
