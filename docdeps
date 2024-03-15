@@ -56,6 +56,8 @@ apt-get install --yes --no-install-recommends \
     python3-argh \
     python3-pip \
     python3-rich \
+    python-pydot \
+    python-pydot-ng \
     qemu-system-x86 \
     rsync \
     screen \
