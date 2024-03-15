@@ -42,6 +42,7 @@ jobs:
           . sphinx/bin/activate
           pip install -r ./Documentation/sphinx/requirements.txt
           make htmldocs
+          make LLVM=1 rustdoc
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

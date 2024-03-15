@@ -1,0 +1,26 @@
+# if any file is changed
+- Documentation:
+  - any:
+    - changed-files:
+       - any-glob-to-any-file:
+          - '/Documentation/**'
+- Rust:
+  - any:
+    - changed-files:
+       - any-glob-to-any-file:
+          - '/**/*.rs'
+          - '/**/Cargo.toml'
+          - '/**/Cargo.lock'
+          - '/**/rust-toolchain'
+- Unsafe:
+  - any:
+    - changed-files:
+       - any-glob-to-any-file:
+          - '/**/*.c'
+          - '/**/*.h'
+          - '/**/*.S'
+- Chore:
+  - any:
+    - changed-files:
+       - any-glob-to-any-file:
+          - '.github/**'
