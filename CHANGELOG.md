@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.8.4](https://github.com/sevki/kernel/compare/v6.8.3...v6.8.4) (2024-03-15)
+
+
+### Bug Fixes
+
+* readme ([9f81cdc](https://github.com/sevki/kernel/commit/9f81cdcd312fc54886a10e6a4faf8a8ea13ec542))
+
 ## [6.8.3](https://github.com/sevki/kernel/compare/v6.8.2...v6.8.3) (2024-03-14)
 
 
