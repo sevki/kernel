@@ -36,7 +36,7 @@ jobs:
       - name: Build Artifacts Package
         id: build_package
         run: |
-          cp arch/x86_64/boot/bzImage kernel-x86_64-${VERSION}.tar.gz
+          cp arch/x86_64/boot/bzImage kernel-x86_64-${SHA}.tar.gz
           sha256sum kernel-x86_64-${SHA}.tar.gz >> kernel-x86_64-${SHA}.tar.gz.sha256
           echo "image_name=kernel-x86_64-${SHA}.tar.gz" >> "$GITHUB_OUTPUT"
           echo "image_hash=$(cat kernel-x86_64-${SHA}.tar.gz.sha256)" >> "$GITHUB_OUTPUT"
@@ -67,7 +67,7 @@ jobs:
           SHA: ${{ github.event.pull_request.head.sha }}
           IMAGE_HASH: ${{ needs.build_kernel.outputs.image_hash }}
           IMAGE_NAME: ${{ needs.build_kernel.outputs.image_name }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.ROBOT_TOKEN }}
         run: |
           git config user.name okmachina
           git config user.email 163742220+okmachina@users.noreply.github.com

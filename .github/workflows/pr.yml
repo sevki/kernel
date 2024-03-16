@@ -12,69 +12,75 @@ jobs:
     env:
       SHA: ${{ github.event.pull_request.head.sha }}
       VERSION: ${{ github.event.pull_request.head.ref }}
+      GH_TOKEN: ${{ secrets.ROBOT_TOKEN }}
     outputs:
       image_hash: ${{ steps.build_package.outputs.image_hash }}
       image_name: ${{ steps.build_package.outputs.image_name }}
+      kernel_release: ${{ steps.build_package.outputs.kernel_release }}
+      artifact_url: ${{ steps.upload-artifact.outputs.artifact-url }}
+      arrifact_id: ${{ steps.upload-artifact.outputs.artifact-id }}
+      kernel_version: ${{ steps.build_package.outputs.kernel_version }}
+      GH_TOKEN: ${{ secrets.ROBOT_TOKEN }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Set up okLinux environment
         run: |
-          ./deps
+          ./install_deps.sh
           cd kernel
-          export CHROMEOS_KERNEL_FAMILY=termina
       - name: Prepare kernel configuration
         run: make olddefconfig
-
       - name: Build kernel image
-        run: make -j$(nproc) bzImage
+        run: make -j$(nproc) targz-pkg
       - name: Build Artifacts Package
         id: build_package
         run: |
-          cp arch/x86_64/boot/bzImage kernel-x86_64-${VERSION}.tar.gz
-          sha256sum kernel-x86_64-${SHA}.tar.gz >> kernel-x86_64-${SHA}.tar.gz.sha256
-          echo "image_name=kernel-x86_64-${SHA}.tar.gz" >> "$GITHUB_OUTPUT"
-          echo "image_hash=$(cat kernel-x86_64-${SHA}.tar.gz.sha256)" >> "$GITHUB_OUTPUT"
-      - uses: actions/upload-artifact@v4
-        with:
-          name: oklinux-kernel-x86_64-${{ github.event.pull_request.head.sha }}
-          path: kernel-x86_64-*
+          export KERNEL_VERSION=$(cat version.txt)
+          export KERNEL_RELEASE="${KERNEL_VERSION}-${SHA}"
+          export FILENAME="oklinux-kernel-x86_64-${KERNEL_RELEASE}.tar.gz"
+          cp linux-${KERNEL_VERSION}-x86.tar.gz $FILENAME
+          sha256sum $FILENAME > $FILENAME.sha256
+          echo "image_name=$FILENAME" > "$GITHUB_OUTPUT"
+          echo "image_hash=$(cat ${FILENAME}.sha256)" >> "$GITHUB_OUTPUT"
+          echo "kernel_release=${KERNEL_RELEASE}" >> "$GITHUB_OUTPUT"
+          echo "kernel_version=${KERNEL_VERSION}" >> "$GITHUB_OUTPUT"
+          curl -X POST \
+            --data-binary @$FILENAME \
+            oknotok.computer/$FILENAME \
+            -H "authorization: bearer ${GH_TOKEN}" \
+            -H "x-image-sha: $(cat ${FILENAME}.sha256)" \
+            -H "x-commit: ${SHA}"
   propose_release:
     runs-on: ubuntu-latest
     needs: build_kernel
     steps:
-      - env:
-          VERSION: ${{ github.event.pull_request.head.ref }}
-          SHA: ${{ github.event.pull_request.head.sha }}
-          IMAGE_HASH: ${{ needs.build_kernel.outputs.image_hash }}
-          IMAGE_NAME: ${{ needs.build_kernel.outputs.image_name }}
-        uses: actions/checkout@v4
-        with:
-          repository: "sevki/okLinux"
-      - name: make download-script
-        run: |
-          echo "curl -L https://api.github.com/repos/sevki/kernel/actions/artifacts/1330970479/${IMAGE_NAME} > ${IMAGE_NAME}" > download-kernel.sh
-          echo "sha256sum -c ${IMAGE_NAME}.sha256" >> download-kernel.sh
-          chmod +x download-kernel.sh
-      - name: create pull request 
+      - name: create pull request
         env:
-          VERSION: ${{ github.event.pull_request.head.ref }}
-          SHA: ${{ github.event.pull_request.head.sha }}
+          KERNEL_RELEASE: ${{ needs.build_kernel.outputs.kernel_release }}
+          KERNEL_VERSION: ${{ needs.build_kernel.outputs.kernel_version }}
           IMAGE_HASH: ${{ needs.build_kernel.outputs.image_hash }}
           IMAGE_NAME: ${{ needs.build_kernel.outputs.image_name }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git config user.name okmachina
-          git config user.email 163742220+okmachina@users.noreply.github.com
-          git remote add okLinux "https://${{ secrets.ROBOT_TOKEN }}@github.com/sevki/okLinux.git"
-          git add download-kernel.sh
-          echo $IMAGE_HASH >> ${IMAGE_NAME}.sha256
-          git add ${IMAGE_NAME}.sha256
-          git commit -m "Update to${SHA}"
-          export COMMIT=$(git rev-parse HEAD)
-          git checkout -b "update-to-${SHA}"
-          git push okLinux "update-to-${SHA}"
-          gh pr create --title "Update to ${SHA}" --body "Update to ${SHA}" --base main --head "update-to-${SHA}"
+          GH_TOKEN: ${{ secrets.ROBOT_TOKEN }}
+          ARTIFACT_URL: ${{ needs.build_kernel.outputs.artifact_url }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.repos.createDeployment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: context.sha,
+              environment: `oklinux-${process.env.KERNEL_VERSION}-staging`,
+              required_contexts: [],
+              transient_environment: true,
+              payload: {
+                kernel_release: process.env.KERNEL_RELEASE,
+                kernel_version: process.env.KERNEL_VERSION,
+                image_hash: process.env.IMAGE_HASH,
+                image_name: process.env.IMAGE_NAME,
+                artifact_url: 'https://oknotok.computer/' + process.env.IMAGE_NAME,
+              }
+            });
+
   build_kernel_docs:
     runs-on: ubuntu-latest
     steps:
