@@ -14,10 +14,14 @@ name: "CodeQL"
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+  # pull_request:
+  #   branches: [ "main" ]
   schedule:
     - cron: '44 8 * * 2'
+# also trigger on when commented /scan-codeql  on the pr
+  issue_comment:
+    types: [created]
+    pattern: /scan    
 
 jobs:
   analyze:
