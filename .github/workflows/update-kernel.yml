@@ -1,0 +1,64 @@
+name: Update Kernel from ChromeOS
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-kernel:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch upstream chromeos-6.6
+        run: |
+          git remote add upstream https://chromium.googlesource.com/chromiumos/third_party/kernel || true
+          git fetch upstream chromeos-6.6
+
+      - name: Check for new changes
+        id: check
+        run: |
+          DIFF=$(git rev-list HEAD..upstream/chromeos-6.6 --count)
+          echo "new_commits=$DIFF" >> "$GITHUB_OUTPUT"
+
+      - name: Merge upstream changes
+        if: steps.check.outputs.new_commits != '0'
+        id: merge
+        run: |
+          if ! git merge upstream/chromeos-6.6 --no-edit; then
+            echo "conflict=true" >> "$GITHUB_OUTPUT"
+            git merge --abort
+          fi
+
+      - name: Create Pull Request
+        if: steps.check.outputs.new_commits != '0' && steps.merge.outputs.conflict != 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: update kernel from chromeos-6.6"
+          branch: update/chromeos-6.6
+          title: "chore: update kernel from chromeos-6.6"
+          body: |
+            Automated daily update from upstream ChromeOS kernel.
+
+            Source: `chromeos-6.6` branch of `https://chromium.googlesource.com/chromiumos/third_party/kernel`
+
+      - name: Report merge conflict
+        if: steps.merge.outputs.conflict == 'true'
+        run: |
+          echo "::error::Merge conflict detected when merging upstream/chromeos-6.6. Manual resolution required."
+          exit 1
